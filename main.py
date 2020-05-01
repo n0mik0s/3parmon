@@ -36,7 +36,8 @@ if __name__=="__main__":
             tpar = TPAR7K.TPAR7K(ssh_config=cf['ssh_config'])
             js_arr = tpar.getdata()
 
-            es_eng = es.es(es_config=cf['es_config'])
-            es_eng.bulk_insert(es_config=cf['es_config'], js_arr=js_arr)
+            if js_arr:
+                es_eng = es.es(es_config=cf['es_config'])
+                es_eng.bulk_insert(es_config=cf['es_config'], js_arr=js_arr)
 
     print(datetime.datetime.now() - startTime)
