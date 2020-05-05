@@ -733,108 +733,86 @@ class TPAR7K():
         return _lds
 
     def _showsys(self):
-        _cmd_to_execute = 'showsys -space'
+        _cmds = {
+            "FC": "showsys -space -devtype FC",
+            "NL": "showsys -space -devtype NL",
+            "SSD": "showsys -space -devtype SSD",
+            "ALL": "showsys -space"
+        }
         _sys = []
 
-        _ssh_stdin, _ssh_stdout, _ssh_stderr = self.ssh_client.exec_command(_cmd_to_execute)
-        _stdout = list(_ssh_stdout)
+        for _devtype in _cmds:
+            _ssh_stdin, _ssh_stdout, _ssh_stderr = self.ssh_client.exec_command(_cmds[_devtype])
+            _stdout = list(_ssh_stdout)
 
-        """
-                3PAR7KT cli% showsys -space
-        ------------- System Capacity (MB) --------------
-        Total Capacity                      :   401719296
-          Allocated                         :   338138112
-            Volumes                         :   325562368
-              Non-CPGs                      :           0
-                User                        :           0
-                Snapshot                    :           0
-                Admin                       :           0
-              CPGs (TPVVs & TDVVs & CPVVs)  :   325562368
-                User                        :   324704195
-                  Used                      :   324653305
-                  Used (Bulk VVs)           :           0
-                  Unused                    :       50890
-                Snapshot                    :      120893
-                  Used                      :           0
-                  Used (Bulk VVs)           :           0
-                  Unused                    :      120893
-                Admin                       :      737280
-                  Used                      :      660864
-                  Used (Bulk VVs)           :           0
-                  Unused                    :       76416
-              Unmapped                      :           0
-            System                          :    12321792
-              Internal                      :      130048
-              Spare                         :    12191744
-                Used                        :           0
-                Unused                      :    12191744
-          Free                              :    63577088
-            Initialized                     :    63577088
-            Uninitialized                   :           0
-          Unavailable                       :           0
-          Failed                            :        4096
-        logging failed, result = logtask : Permission denied
-        -------------- Capacity Efficiency --------------
-        logging failed, result = logtask : Permission denied
-        Compaction                          :         1.1
-        logging failed, result = logtask : Permission denied
-        Dedup                               :   ---------
-        """
+            """
+                    3PAR7KT cli% showsys -space
+            ------------- System Capacity (MB) --------------
+            Total Capacity                      :   401719296
+              Allocated                         :   338138112
+                Volumes                         :   325562368
+                  Non-CPGs                      :           0
+                    User                        :           0
+                    Snapshot                    :           0
+                    Admin                       :           0
+                  CPGs (TPVVs & TDVVs & CPVVs)  :   325562368
+                    User                        :   324704195
+                      Used                      :   324653305
+                      Used (Bulk VVs)           :           0
+                      Unused                    :       50890
+                    Snapshot                    :      120893
+                      Used                      :           0
+                      Used (Bulk VVs)           :           0
+                      Unused                    :      120893
+                    Admin                       :      737280
+                      Used                      :      660864
+                      Used (Bulk VVs)           :           0
+                      Unused                    :       76416
+                  Unmapped                      :           0
+                System                          :    12321792
+                  Internal                      :      130048
+                  Spare                         :    12191744
+                    Used                        :           0
+                    Unused                      :    12191744
+              Free                              :    63577088
+                Initialized                     :    63577088
+                Uninitialized                   :           0
+              Unavailable                       :           0
+              Failed                            :        4096
+            logging failed, result = logtask : Permission denied
+            -------------- Capacity Efficiency --------------
+            logging failed, result = logtask : Permission denied
+            Compaction                          :         1.1
+            logging failed, result = logtask : Permission denied
+            Dedup                               :   ---------
+            """
 
-        if _stdout:
-            _i = 0
-            _stdout_dict = {}
-            _sys_dict = {}
-            _pattern = re.compile(r'(?P<key>.*?):\s+(?P<value>\d+)')
-            for _line in _stdout[1:-7]:
-                try:
-                    _match = _pattern.match(_line.strip())
-                except:
-                    print('WRN: [TPAR7K:_showsys]: There was an error occurred with _line re.match')
-                    print(_line.strip().strip())
-                else:
-                    if _match:
-                        _groupdict = _match.groupdict()
-                        _key = (_groupdict['key']).strip()
-                        _value = (_groupdict['value']).strip()
-                        _stdout_dict[_i] = {_key: _value}
-                _i += 1
+            if _stdout:
+                _i = 0
+                _stdout_dict = {}
+                _sys_dict = {}
+                _pattern = re.compile(r'(?P<key>.*?):\s+(?P<value>\d+)')
+                for _line in _stdout[1:-7]:
+                    try:
+                        _match = _pattern.match(_line.strip())
+                    except:
+                        print('WRN: [TPAR7K:_showsys]: There was an error occurred with _line re.match')
+                        print(_line.strip().strip())
+                    else:
+                        if _match:
+                            _groupdict = _match.groupdict()
+                            _key = (_groupdict['key']).strip()
+                            _value = (_groupdict['value']).strip()
+                            _stdout_dict[_i] = {_key: _value}
+                    _i += 1
 
-            _sys_dict['showsys_Total_Capacity'] = _stdout_dict[0]['Total Capacity']
-            _sys_dict['showsys_Allocated'] = _stdout_dict[1]['Allocated']
-            _sys_dict['showsys_Allocated_Volumes'] = _stdout_dict[2]['Volumes']
-            _sys_dict['showsys_Allocated_Volumes_Non_CPGs'] = _stdout_dict[3]['Non-CPGs']
-            _sys_dict['showsys_Allocated_Volumes_Non_CPGs_User'] = _stdout_dict[4]['User']
-            _sys_dict['showsys_Allocated_Volumes_Non_CPGs_Snapshot'] = _stdout_dict[5]['Snapshot']
-            _sys_dict['showsys_Allocated_Volumes_Non_CPGs_Admin'] = _stdout_dict[6]['Admin']
-            _sys_dict['showsys_Allocated_Volumes_CPGs'] = _stdout_dict[7]['CPGs (TPVVs & TDVVs & CPVVs)']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_User'] = _stdout_dict[8]['User']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_User_Used'] = _stdout_dict[9]['Used']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_User_Used_Bulk'] = _stdout_dict[10]['Used (Bulk VVs)']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_User_Unused'] = _stdout_dict[11]['Unused']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Snapshot'] = _stdout_dict[12]['Snapshot']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Snapshot_Used'] = _stdout_dict[13]['Used']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Snapshot_Used_Bulk'] = _stdout_dict[14]['Used (Bulk VVs)']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Snapshot_Unused'] = _stdout_dict[15]['Unused']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Admin'] = _stdout_dict[16]['Admin']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Admin_Used'] = _stdout_dict[17]['Used']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Admin_Used_Bulk'] = _stdout_dict[18]['Used (Bulk VVs)']
-            _sys_dict['showsys_Allocated_Volumes_CPGs_Admin_Unused'] = _stdout_dict[19]['Unused']
-            _sys_dict['showsys_Allocated_Volumes_Unmapped'] = _stdout_dict[20]['Unmapped']
-            _sys_dict['showsys_Allocated_System'] = _stdout_dict[21]['System']
-            _sys_dict['showsys_Allocated_System_Internal'] = _stdout_dict[22]['Internal']
-            _sys_dict['showsys_Allocated_System_Spare'] = _stdout_dict[23]['Spare']
-            _sys_dict['showsys_Allocated_System_Spare_Used'] = _stdout_dict[24]['Used']
-            _sys_dict['showsys_Allocated_System_Spare_Unused'] = _stdout_dict[25]['Unused']
-            _sys_dict['showsys_Free'] = _stdout_dict[26]['Free']
-            _sys_dict['showsys_Free_Initialized'] = _stdout_dict[27]['Initialized']
-            _sys_dict['showsys_Free_Uninitialized'] = _stdout_dict[28]['Uninitialized']
-            _sys_dict['showsys_Unavailable'] = _stdout_dict[29]['Unavailable']
-            _sys_dict['showsys_Failed'] = _stdout_dict[30]['Failed']
-            _sys_dict['timestamp'] = self.timestamp
-            _sys_dict['storage_name'] = self.storage_name
-            _sys_dict['cmd'] = 'showsys'
-            _sys.append(_sys_dict)
+                _sys_dict['showsys_Total_Capacity'] = _stdout_dict[0]['Total Capacity']
+                _sys_dict['showsys_Allocated'] = _stdout_dict[1]['Allocated']
+                _sys_dict['showsys_devtype'] = _devtype
+                _sys_dict['timestamp'] = self.timestamp
+                _sys_dict['storage_name'] = self.storage_name
+                _sys_dict['cmd'] = 'showsys'
+                _sys.append(_sys_dict)
 
         return _sys
 

@@ -1,0 +1,16 @@
+ssh_config:
+  server: 3par10k1.sdab.sn
+  username: 3parmon
+  password: 3parmon
+
+es_config:
+  nodes: [kilo.sdab.sn]
+  port: 9200
+  use_ssl: True
+  verify_certs: True
+  ca_cert: /home/doopy/pyprojects/3parmon/kilo.pem
+  pattern: 3parmon-
+  shards: 1
+  replicas: 0
+  user: tparmon
+  password: tparmon
