@@ -14,3 +14,6 @@ es_config:
   replicas: 0
   user: tparmon
   password: tparmon
+  template: 3parmon
+  lifecycle_name: 3parmon
+  lifecycle_rollover_alias: 3parmon

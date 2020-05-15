@@ -32,6 +32,9 @@ class es():
         _js_arr = js_arr
         _shards = _es_config['shards']
         _replicas = _es_config['replicas']
+        _template= _es_config['template']
+        _lifecycle_name = _es_config['lifecycle_name']
+        _lifecycle_rollover_alias = _es_config['lifecycle_rollover_alias']
         _date_pattern = '{0:%Y}'.format(datetime.datetime.today())
         _index = _es_config['pattern'] + _date_pattern
 
@@ -69,22 +72,6 @@ class es():
                     "statld_Ldname": {"type": "keyword"},
                     "cmd": {"type": "keyword"},
                     "showsys_devtype": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
-                    # "": {"type": "keyword"},
                     "showvvs_Adm_Rsvd": {"type": "float"},
                     "showvvs_Adm_Used": {"type": "float"},
                     "showvvs_Usr_pct_VSize_Used": {"type": "float"},
@@ -114,53 +101,10 @@ class es():
                     "statld_IOSz_KB_Avg": {"type": "float"},
                     "showsys_Allocated": {"type": "long"},
                     "showsys_Total_Capacity": {"type": "long"},
-                    # "": {"type": "long"},
-                    # "": {"type": "long"},
-                    # "": {"type": "long"},
-                    # "": {"type": "long"},
-                    # "": {"type": "long"},
-                    # "": {"type": "long"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
-                    # "": {"type": "float"},
                 }
             }
         }
 
-        _body = {
-            "settings": {
-                "number_of_shards": _shards,
-                "number_of_replicas": _replicas
-            },
-            "mappings": _map["mappings"]
-        }
         _actions = [
             {
                 "_index": _index,
@@ -169,10 +113,26 @@ class es():
             for _js in _js_arr
         ]
 
+        _body_index = {
+            "aliases": {_lifecycle_rollover_alias: {"is_write_index" : 'true'}}
+        }
+
+        _body_template = {
+            "index_patterns": [(str(_es_config['pattern']) + '*')],
+            "settings": {
+                "number_of_shards": _shards,
+                "number_of_replicas": _replicas,
+                "index.lifecycle.name": _lifecycle_name,
+                "index.lifecycle.rollover_alias": _lifecycle_rollover_alias
+            },
+            "mappings": _map["mappings"]
+        }
+
         if self.es_eng:
             if not self.es_eng.indices.exists(index=_index):
                 try:
-                    self.es_eng.indices.create(index=_index, body=_body)
+                    self.es_eng.indices.put_template(name=_template, body=_body_template)
+                    self.es_eng.indices.create(index=_index, body=_body_index)
                 except Exception as _err:
                     print('ERR: [es:bulk_insert]', _err)
                     return False
