@@ -4,16 +4,17 @@ ssh_config:
   password: 3parmon
 
 es_config:
-  nodes: [kilo.sdab.sn]
+  nodes: [magneto.sdab.sn, beast.sdab.sn, storm.sdab.sn, cetus.sdab.sn]
   port: 9200
   use_ssl: True
   verify_certs: True
-  ca_cert: /home/doopy/pyprojects/3parmon/kilo.pem
-  pattern: 3parmon-
-  shards: 1
-  replicas: 0
-  template: 3parmon
-  lifecycle_name: 3parmon
-  lifecycle_rollover_alias: 3parmon
+  ca_cert: /home/doopy/pyprojects/3parmon/root-ca.pem
+  pattern: tparmon
+  shards: 3
+  replicas: 1
   user: tparmon
   password: tparmon
+  template: template_tparmon
+  lifecycle_name: tparmon
+  lifecycle_rollover_alias: rollover_alias_tparmon
+  index: tparmon-000001

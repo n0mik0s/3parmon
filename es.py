@@ -33,10 +33,10 @@ class es():
         _shards = _es_config['shards']
         _replicas = _es_config['replicas']
         _template= _es_config['template']
+        _template = _es_config['template']
         _lifecycle_name = _es_config['lifecycle_name']
         _lifecycle_rollover_alias = _es_config['lifecycle_rollover_alias']
-        _date_pattern = '{0:%Y}'.format(datetime.datetime.today())
-        _index = _es_config['pattern'] + _date_pattern
+        _index = _es_config['index']
 
         _map = {
             "mappings": {
@@ -104,15 +104,6 @@ class es():
                 }
             }
         }
-
-        _actions = [
-            {
-                "_index": _index,
-                "_source": json.dumps(_js)
-            }
-            for _js in _js_arr
-        ]
-
         _body_index = {
             "aliases": {_lifecycle_rollover_alias: {"is_write_index" : 'true'}}
         }
@@ -125,17 +116,32 @@ class es():
                 "index.lifecycle.name": _lifecycle_name,
                 "index.lifecycle.rollover_alias": _lifecycle_rollover_alias
             },
-            "mappings": _map["mappings"]
+            "mappings": _map["mappings"],
         }
 
+        _actions = [
+            {
+                "_index": _lifecycle_rollover_alias,
+                "_source": json.dumps(_js)
+            }
+            for _js in _js_arr
+        ]
+
         if self.es_eng:
-            if not self.es_eng.indices.exists(index=_index):
+            if not self.es_eng.indices.exists_template(name=_template):
                 try:
                     self.es_eng.indices.put_template(name=_template, body=_body_template)
+                except Exception as _err:
+                    print('ERR: [es:bulk_insert]', _err)
+                    return False
+
+            if not self.es_eng.cat.aliases(name=_lifecycle_rollover_alias, format='json'):
+                try:
                     self.es_eng.indices.create(index=_index, body=_body_index)
                 except Exception as _err:
                     print('ERR: [es:bulk_insert]', _err)
                     return False
+
             try:
                 elasticsearch.helpers.bulk(self.es_eng, _actions, chunk_size=500, request_timeout=30)
             except Exception as _err:
